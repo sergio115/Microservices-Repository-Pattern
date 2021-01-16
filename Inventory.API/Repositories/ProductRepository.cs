@@ -6,66 +6,57 @@ using System.Linq;
 
 namespace Inventory.API.Repositories
 {
-    public class ProductRepository : IProductRepository, IDisposable
+    public class ProductRepository : IProductRepository
     {
         private readonly DBContext _dBContext;
-        private bool disposed = false;
 
         public ProductRepository(DBContext dBContext)
         {
             _dBContext = dBContext;
         }
 
-        public IEnumerable<Product> GetProducts()
-        {
-            return _dBContext.Products.ToList();
-        }
-
-        public Product GetProductById(int ProductID)
-        {
-            return _dBContext.Products.Find(ProductID);
-        }
-
-        public void InsertProduct(Product product)
+        public bool CreateProduct(Product product)
         {
             _dBContext.Products.Add(product);
-            Save();
+            return Save();
         }
 
-        public void DeleteProduct(int ProductID)
+        public bool DeleteProduct(Product product)
         {
-            Product product = _dBContext.Products.Find(ProductID);
             _dBContext.Products.Remove(product);
-            Save();
+            return Save();
         }
 
-        public void UpdateProduct(Product product)
+        public bool ExistProduct(string name)
         {
-            _dBContext.Entry(product).State = EntityState.Modified;
-            Save();
+            bool value = _dBContext.Products.Any(product => product.Name.ToLower().Trim() == name.ToLower().Trim());
+            return value;
         }
 
-        protected virtual void Dispose(bool disposing)
+        public bool ExistProduct(int ProductID)
         {
-            if (!this.disposed)
-            {
-                if (disposing)
-                {
-                    _dBContext.Dispose();
-                }
-            }
-            this.disposed = true;
+            return _dBContext.Products.Any(product => product.ProductID == ProductID);
         }
 
-        public void Dispose()
+        public Product GetProduct(int ProductID)
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            return _dBContext.Products.FirstOrDefault(product => product.ProductID == ProductID);
         }
 
-        public void Save()
+        public ICollection<Product> GetProducts()
         {
-            _dBContext.SaveChanges();
+            return _dBContext.Products.OrderBy(product => product.Name).ToList();
+        }
+
+        public bool Save()
+        {
+            return _dBContext.SaveChanges() >= 0 ? true : false;
+        }
+
+        public bool UpdateProduct(Product product)
+        {
+            _dBContext.Products.Update(product);
+            return Save();
         }
     }
 }

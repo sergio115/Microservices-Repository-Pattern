@@ -1,4 +1,5 @@
 using Inventory.API.Models;
+using Inventory.API.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +29,8 @@ namespace Inventory.API
         {
             services.AddDbContext<DBContext>(options => 
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+            services.AddScoped<IProductRepository, ProductRepository>();
 
             services.AddControllers();
         }

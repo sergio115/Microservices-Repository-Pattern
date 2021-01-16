@@ -10,124 +10,95 @@ using Inventory.API.Repositories;
 
 namespace Inventory.API.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class ProductsController : Controller
     {
-        private readonly DBContext _context;
         private IProductRepository _productRespository;
-
-
-        public ProductsController()
-        {
-            this._productRespository = new ProductRepository(_context);
-        }
 
         public ProductsController(IProductRepository productRepository)
         {
-            this._productRespository = productRepository;
+            _productRespository = productRepository;
         }
 
-        // GET: Products
-        public ActionResult Index()
+        [HttpGet]
+        public IActionResult GetProducts()
         {
-            return View(_productRespository.GetProducts());
+            var listProducts = _productRespository.GetProducts();
+            return Ok(listProducts);
         }
 
-        // GET: Products/Details/5
-        public ActionResult Details(int? id)
+        [HttpGet("{productID:int}", Name = "GetProduct")]
+        public IActionResult GetProduct(int productID)
         {
-            if (id == null)
+
+            var itemCategory = _productRespository.GetProduct(productID);
+
+            if (itemCategory == null)
             {
                 return NotFound();
             }
 
-            Product product = _productRespository.GetProductById((int)id);
-            
-            if (product == null)
-            {
-                return NotFound();
-            }
-
-            return View(product);
+            return Ok(itemCategory);
         }
 
-        // GET: Products/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Products/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
-        // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind("ProductID,Name,Description,Cost,Price,Stock")] Product product)
+        public IActionResult CreateProduct([FromBody] Product product)
         {
-            if (ModelState.IsValid)
-            {
-                _productRespository.InsertProduct(product);
-                return RedirectToAction(nameof(Index));
-            }
-            return View(product);
-        }
-
-        // GET: Products/Edit/5
-        public ActionResult Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            Product product = _productRespository.GetProductById((int)id);
-
             if (product == null)
             {
+                return BadRequest(ModelState);
+            }
+
+            if (_productRespository.ExistProduct(product.Name))
+            {
+                ModelState.AddModelError("", "El producto ya existe");
+                return StatusCode(404, ModelState);
+            }
+
+            if (!_productRespository.CreateProduct(product))
+            {
+                ModelState.AddModelError("", $"Algo salio mal guardando el registro {product.Name}");
+                return StatusCode(500, ModelState);
+            }
+
+            return CreatedAtRoute("GetProduct", new { productID = product.ProductID }, product);
+        }
+
+        [HttpPatch("{productID:int}", Name = "UpdateProduct")]
+        public IActionResult UpdateProduct(int productID, [FromBody] Product product)
+        {
+            if (product == null || productID != product.ProductID)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (!_productRespository.UpdateProduct(product))
+            {
+                ModelState.AddModelError("", $"Algo salio mal actualizando el registro {product.Name}");
+                return StatusCode(500, ModelState);
+            }
+
+            return NoContent();
+        }
+
+        [HttpDelete("{productID:int}", Name = "DeleteProduct")]
+        public IActionResult DeleteProduct(int productID)
+        {
+            if (!_productRespository.ExistProduct(productID))
+            {
                 return NotFound();
             }
-            return View(product);
-        }
 
-        // POST: Products/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
-        // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind("ProductID,Name,Description,Cost,Price,Stock")] Product product)
-        {
-            if (ModelState.IsValid)
-            {
-                _productRespository.UpdateProduct(product);
-                return RedirectToAction(nameof(Index));
-            }
-            return View(product);
-        }
+            var product = _productRespository.GetProduct(productID);
 
-        // GET: Products/Delete/5
-        public ActionResult Delete(int? id)
-        {
-            if (id == null)
+            if (!_productRespository.DeleteProduct(product))
             {
-                return NotFound();
-            }
-            Product product = _productRespository.GetProductById((int)id);
-
-            if (product == null)
-            {
-                return NotFound();
+                ModelState.AddModelError("", $"Algo salio mal al intentar borrar el registro {product.Name}");
+                return StatusCode(500, ModelState);
             }
 
-            return View(product);
+            return NoContent();
         }
-
-        // POST: Products/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
-        {
-            _productRespository.DeleteProduct((int)id);
-            return RedirectToAction(nameof(Index));
-        }
-
     }
 }

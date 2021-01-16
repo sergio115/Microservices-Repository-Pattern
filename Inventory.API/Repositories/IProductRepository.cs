@@ -4,13 +4,15 @@ using System.Collections.Generic;
 
 namespace Inventory.API.Repositories
 {
-    public interface IProductRepository : IDisposable
+    public interface IProductRepository
     {
-        IEnumerable<Product> GetProducts();
-        Product GetProductById(int ProductID);
-        void InsertProduct(Product product);
-        void DeleteProduct(int ProductID);
-        void UpdateProduct(Product product);
-        void Save();
+        ICollection<Product> GetProducts();
+        Product GetProduct(int ProductID);
+        bool ExistProduct(string name);
+        bool ExistProduct(int ProductID);
+        bool CreateProduct(Product product);
+        bool UpdateProduct(Product product);
+        bool DeleteProduct(Product product);
+        bool Save();
     }
 }
