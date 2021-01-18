@@ -11,77 +11,77 @@ using System.Threading.Tasks;
 
 namespace Client.Controllers
 {
-    public class ProductController : Controller
+    public class CategoryController : Controller
     {
         HttpClientHandler _httpClientHandler = new HttpClientHandler();
 
-        public ProductController()
+        public CategoryController()
         {
             _httpClientHandler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
         }
 
-        Product product = new Product();
-        List<Product> products = new List<Product>();
+        Category category = new Category();
+        List<Category> categories = new List<Category>();
 
         public async Task<ActionResult> Index()
         {
-            products = new List<Product>();
+            categories = new List<Category>();
 
             using (var httpClient = new HttpClient(_httpClientHandler))
             {
-                using (var response = await httpClient.GetAsync("http://localhost:63532/api/products"))
+                using (var response = await httpClient.GetAsync("https://localhost:44323/api/categories"))
                 {
                     string apiResponse = await response.Content.ReadAsStringAsync();
-                    products = JsonConvert.DeserializeObject<List<Product>>(apiResponse);
+                    categories = JsonConvert.DeserializeObject<List<Category>>(apiResponse);
                 }
             }
 
-            return View(products);
+            return View(categories);
         }
 
-        public async Task<ActionResult> GetById(int productID)
+        public async Task<ActionResult> GetById(int categoryID)
         {
-            product = new Product();
+            category = new Category();
 
             using (var httpClient = new HttpClient(_httpClientHandler))
             {
-                using (var response = await httpClient.GetAsync($"http://localhost:63532/api/products/{productID}"))
+                using (var response = await httpClient.GetAsync($"https://localhost:44323/api/categories/{categoryID}"))
                 {
                     string apiResponse = await response.Content.ReadAsStringAsync();
-                    product = JsonConvert.DeserializeObject<Product>(apiResponse);
+                    category = JsonConvert.DeserializeObject<Category>(apiResponse);
                 }
             }
 
-            return View(product);
+            return View(category);
         }
 
         [HttpPost]
-        public async Task<ActionResult> Add(Product product)
+        public async Task<ActionResult> Add(Category category)
         {
-            product = new Product();
+            category = new Category();
 
             using (var httpClient = new HttpClient(_httpClientHandler))
             {
-                StringContent content = new StringContent(JsonConvert.SerializeObject(product), Encoding.UTF8, "application/json");
+                StringContent content = new StringContent(JsonConvert.SerializeObject(category), Encoding.UTF8, "application/json");
 
-                using (var response = await httpClient.PostAsync($"http://localhost:63532/api/products", content))
+                using (var response = await httpClient.PostAsync($"https://localhost:44323/api/categories", content))
                 {
                     string apiResponse = await response.Content.ReadAsStringAsync();
-                    product = JsonConvert.DeserializeObject<Product>(apiResponse);
+                    category = JsonConvert.DeserializeObject<Category>(apiResponse);
                 }
             }
 
-            return View(product);
+            return View(category);
         }
 
         [HttpDelete]
-        public async Task<ActionResult> Delete(int productID)
+        public async Task<ActionResult> Delete(int categoryID)
         {
             string message = "";
-            
+
             using (var httpClient = new HttpClient(_httpClientHandler))
             {
-                using (var response = await httpClient.DeleteAsync($"http://localhost:63532/api/products/{productID}"))
+                using (var response = await httpClient.DeleteAsync($"https://localhost:44323/api/products/{categoryID}"))
                 {
                     message = await response.Content.ReadAsStringAsync();
                 }
@@ -89,6 +89,5 @@ namespace Client.Controllers
 
             return View();
         }
-
     }
 }
